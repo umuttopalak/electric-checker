@@ -1,0 +1,7 @@
+responses:
+  200:
+    description: "System working status"
+    examples:
+      application/json:
+        status: "OK"
+        message: "System Working!"

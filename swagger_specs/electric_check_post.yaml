@@ -1,0 +1,26 @@
+parameters:
+  - name: "body"
+    in: "body"
+    required: true
+    schema:
+      type: "object"
+      properties:
+        username:
+          type: "string"
+          description: "The username of the user."
+      required:
+        - "username"
+responses:
+  200:
+    description: "Last request date updated"
+    examples:
+      application/json:
+        status: "OK"
+        message: "Last request date updated"
+        data:
+          user: "example@mail.com"
+          last_request_date: "2024-09-01T12:00:00Z"
+  400:
+    description: "Username is required"
+  404:
+    description: "User not found"
