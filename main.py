@@ -13,13 +13,13 @@ def hello_world():
     return 'Hello World'
 
 
-@app.route('/health-check')
+@app.route('/health-check', methods=['GET'])
 def health_check():
     global last_request_date
     return {'status': 'OK', 'last_request_date': last_request_date}
 
 
-@app.route('/electric-check')
+@app.route('/electric-check', methods=['GET'])
 def electric_check():
     global last_request_date
     last_request_date = datetime.now()
