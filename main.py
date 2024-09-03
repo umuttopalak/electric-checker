@@ -1,11 +1,34 @@
-
+import os
+import uuid
 from datetime import datetime
 
+from dotenv import load_dotenv
 from flask import Flask
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+
+load_dotenv()
+
+db_host = os.environ("HOST")
+db_user = os.environ("USER")
+db_password = os.environ("PASSWORD")
+db_database = os.environ("DATABASE")
 
 app = Flask(__name__)
 
-last_request_date = None
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_database}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    last_request_date = db.Column(db.DateTime, nullable=True)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 
 @app.route('/')
