@@ -43,9 +43,10 @@ def health_check():
     return jsonify(status='OK', message="System Working!"), 200
 
 
-@app.route('/electric-check', methods=['GET'])
-def electric_check():
-    username = request.headers.get('username', None)
+@app.route('/electric-check', methods=['POST'])
+def post_electric_check():
+    data = request.get_json()
+    username = data.get('username', None)
     if username is None:
         return jsonify(message='Username is required'), 400
 
@@ -57,6 +58,19 @@ def electric_check():
     user.last_request_date = last_request_date
     db.session.commit()
     return jsonify(status='OK', message='Last request date updated', data={'user': user.email, 'last_request_date': last_request_date.isoformat()}), 200
+
+@app.route('/electric-check', methods=['GET'])
+def get_electric_check():
+    data = request.get_json()
+    username = data.get('username', None)
+    if username is None:
+        return jsonify(message='Username is required'), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        return jsonify(message='User not found'), 404
+
+    return jsonify(status='OK', message='Last request date retrieved', data={'user': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None}), 200
 
 
 @app.route('/users/list', methods=['GET'])
