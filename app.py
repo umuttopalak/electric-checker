@@ -9,10 +9,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
 
-db_host = os.environ("HOST")
-db_user = os.environ("USER")
-db_password = os.environ("PASSWORD")
-db_database = os.environ("DATABASE")
+db_host = os.environ.get("HOST")
+db_user = os.environ.get("USER")
+db_password = os.environ.get("PASSWORD")
+db_database = os.environ.get("DATABASE")
 
 app = Flask(__name__)
 
