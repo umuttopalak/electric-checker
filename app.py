@@ -23,8 +23,8 @@ swagger_config = {
         {
             "endpoint": DEFAULT_ENDPOINT,
             "route": '/{}.json'.format(DEFAULT_ENDPOINT),
-            "rule_filter": lambda rule: True,  # all in
-            "model_filter": lambda tag: True,  # all in
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
         }
     ],
     "static_url_path": "/flasgger_static",
