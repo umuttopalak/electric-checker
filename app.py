@@ -1,10 +1,11 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from flasgger import Swagger, swag_from
 from flask import Flask, jsonify, request
 from flask_mail import Mail, Message
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade
 from flask_sqlalchemy import SQLAlchemy
 
 from config import Config
@@ -18,14 +19,29 @@ migrate = Migrate(app, db)
 swagger = Swagger(app, config=Config.SWAGGER_CONFIG)
 mail = Mail(app)
 
+scheduler = BackgroundScheduler()
+scheduler.start()
+
 
 class User(db.Model):
-    username = db.Column(db.String(36), primary_key=True, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    username = db.Column(db.String(36), primary_key=True, unique=True,
+                         nullable=False, default=lambda: str(uuid.uuid4()))
     email = db.Column(db.String(200), unique=True, nullable=False)
     last_request_date = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+
+def send_mail(subject, recipient, body):
+    print(recipient)
+    msg = Message(
+        subject=subject,
+        sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
+        recipients=[recipient],
+        body=body
+    )
+    mail.send(msg)
 
 
 @app.route('/')
@@ -106,17 +122,31 @@ def create_user():
     return jsonify(status='OK', message='User created', data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
 
 
-@app.route('/admin/send-email')
-def send_email():
-    msg = Message(
-        subject="Test Subject",
-        sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
-        recipients=["umuttopalak@hotmail.com"],
-        body="Test Message From Electric Checker"
-    )
-    mail.send(msg)
+@app.route('/admin/send-test-email')
+def send_test_email():
+    send_mail("Deneme", "umuttopalak@hotmail.com", "zort")
     return "Email sent successfully!"
 
 
+def send_email_to_unreachable_user():
+    with app.app_context():
+        one_minute_ago = datetime.now() - timedelta(minutes=1)
+        inactive_users = User.query.filter(
+            User.last_request_date < one_minute_ago).all()
+        print(f"inactive users -> {inactive_users}")
+        if inactive_users:
+            for user in inactive_users:
+                send_mail(subject="Dikkat!", recipient=user.email,
+                          body=f"Sayın kullanıcımız bir süredir elektriğinize ulaşamıyoruz.")
+
+            print(f"Mail(s) sended to : f{inactive_users}")
+
+
+scheduler.add_job(func=send_email_to_unreachable_user,
+                  trigger="interval", hours=12)
+
 if __name__ == '__main__':
+    with app.app_context():
+        upgrade()
+
     app.run(host='0.0.0.0', port=3000)
