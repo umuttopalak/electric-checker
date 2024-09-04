@@ -3,18 +3,21 @@ from datetime import datetime
 
 from flasgger import Swagger, swag_from
 from flask import Flask, jsonify, request
+from flask_mail import Mail, Message
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from config import Config  # config dosyasını içe aktar
+from config import Config
 
 app = Flask(__name__)
-app.config.from_object(Config)  # Config sınıfını yükle
+app.config.from_object(Config)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 swagger = Swagger(app, config=Config.SWAGGER_CONFIG)
+
+mail = Mail(app)
 
 
 class User(db.Model):
@@ -38,7 +41,7 @@ def health_check():
     return jsonify(status='OK', message="System Working!"), 200
 
 
-@app.route('/electric-check', methods=['POST'])
+@app.route('user/electric-check', methods=['POST'])
 @swag_from('swagger_specs/electric_check_post.yaml')
 def post_electric_check():
     data = request.get_json()
@@ -56,7 +59,7 @@ def post_electric_check():
     return jsonify(status='OK', message='Last request date updated', data={'user': user.email, 'last_request_date': last_request_date.isoformat()}), 200
 
 
-@app.route('/electric-check', methods=['GET'])
+@app.route('user/electric-check', methods=['GET'])
 @swag_from('swagger_specs/electric_check_get.yaml')
 def get_electric_check():
     username = request.args.get('username', None)
@@ -70,7 +73,7 @@ def get_electric_check():
     return jsonify(status='OK', message='Last request date retrieved', data={'user': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None}), 200
 
 
-@app.route('/users/list', methods=['GET'])
+@app.route('admin/users/list', methods=['GET'])
 @swag_from('swagger_specs/users_list.yaml')
 def users_list():
     admin_key_request = request.headers.get('admin-key', None)
@@ -81,7 +84,7 @@ def users_list():
     return jsonify(status='OK', message='Users retrieved successfully', data={'users': [{'username': user.username, 'email': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None} for user in users]}), 200
 
 
-@app.route('/users/register', methods=['POST'])
+@app.route('admin/users/register', methods=['POST'])
 @swag_from('swagger_specs/users_register.yaml')
 def create_user():
     admin_key_request = request.headers.get('admin-key', None)
@@ -102,6 +105,18 @@ def create_user():
     db.session.commit()
 
     return jsonify(status='OK', message='User created', data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
+
+
+@app.route('admin/send-email')
+def send_email():
+    msg = Message(
+        subject="Test Subject",
+        sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
+        recipients=["umuttopalak@hotmail.com"],
+        body="Test Message From Electric Checker"
+    )
+    mail.send(msg)
+    return "Email sent successfully!"
 
 
 if __name__ == '__main__':
