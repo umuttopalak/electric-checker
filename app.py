@@ -16,7 +16,6 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 swagger = Swagger(app, config=Config.SWAGGER_CONFIG)
-
 mail = Mail(app)
 
 
@@ -41,7 +40,7 @@ def health_check():
     return jsonify(status='OK', message="System Working!"), 200
 
 
-@app.route('user/electric-check', methods=['POST'])
+@app.route('/user/electric-check', methods=['POST'])
 @swag_from('swagger_specs/electric_check_post.yaml')
 def post_electric_check():
     data = request.get_json()
@@ -59,7 +58,7 @@ def post_electric_check():
     return jsonify(status='OK', message='Last request date updated', data={'user': user.email, 'last_request_date': last_request_date.isoformat()}), 200
 
 
-@app.route('user/electric-check', methods=['GET'])
+@app.route('/user/electric-check', methods=['GET'])
 @swag_from('swagger_specs/electric_check_get.yaml')
 def get_electric_check():
     username = request.args.get('username', None)
@@ -73,7 +72,7 @@ def get_electric_check():
     return jsonify(status='OK', message='Last request date retrieved', data={'user': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None}), 200
 
 
-@app.route('admin/users/list', methods=['GET'])
+@app.route('/admin/users/list', methods=['GET'])
 @swag_from('swagger_specs/users_list.yaml')
 def users_list():
     admin_key_request = request.headers.get('admin-key', None)
@@ -84,7 +83,7 @@ def users_list():
     return jsonify(status='OK', message='Users retrieved successfully', data={'users': [{'username': user.username, 'email': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None} for user in users]}), 200
 
 
-@app.route('admin/users/register', methods=['POST'])
+@app.route('/admin/users/register', methods=['POST'])
 @swag_from('swagger_specs/users_register.yaml')
 def create_user():
     admin_key_request = request.headers.get('admin-key', None)
@@ -107,7 +106,7 @@ def create_user():
     return jsonify(status='OK', message='User created', data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
 
 
-@app.route('admin/send-email')
+@app.route('/admin/send-email')
 def send_email():
     msg = Message(
         subject="Test Subject",
