@@ -143,7 +143,7 @@ def send_email_to_unreachable_user():
 
 
 scheduler.add_job(func=send_email_to_unreachable_user,
-                  trigger="interval", seconds=5)
+                  trigger="interval", hours=12)
 
 if __name__ == '__main__':
     with app.app_context():
