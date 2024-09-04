@@ -18,7 +18,7 @@ class Config:
     DB_USER = os.environ.get("USER")
     DB_PASSWORD = os.environ.get("PASSWORD")
     DB_DATABASE = os.environ.get("DATABASE")
-    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}"
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SWAGGER_CONFIG = {
         "headers": [],
