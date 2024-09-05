@@ -238,8 +238,8 @@ def periodic_check():
     if admin_key is None or admin_key != Config.ADMIN_KEY:
         return jsonify(status="NOK", message="Invalid or missing admin key"), 400
     
-    one_minute_ago = datetime.now() - timedelta(minutes=1)
-    inactive_users = User.query.filter(User.last_request_date < one_minute_ago).all()
+    two_hours_ago = datetime.now() - timedelta(hours=2)
+    inactive_users = User.query.filter(User.last_request_date < two_hours_ago).all()
     print(f"inactive users -> {inactive_users}")
     
     if inactive_users:
