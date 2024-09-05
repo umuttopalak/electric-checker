@@ -9,6 +9,7 @@ from flask import Flask, jsonify, request
 from flask_mail import Mail, Message
 from flask_migrate import Migrate, upgrade
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 
 from config import Config
 
@@ -160,6 +161,10 @@ def create_user():
 @app.route('/admin/users/delete/', methods=['DELETE'])
 @swag_from('swagger_specs/users_delete.yaml')
 def delete_user():
+    admin_key_request = request.headers.get('admin-key', None)
+    if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
+        return jsonify(status="NOK", message='Invalid or missing admin key'), 400
+
     data = request.get_json()
     email = data.get('email', None)
     if email is None:
@@ -234,9 +239,16 @@ def create_user_with_telegram():
     if not all([first_name, last_name, email, phone_number, chat_id]):
         return jsonify(status="NOK", message="Missing information"), 400
 
-    user = User.query.filter_by(chat_id=chat_id).first()
+    user = User.query.filter(
+        or_(
+            User.chat_id == chat_id,
+            User.phone_number == phone_number,
+            User.email == email)).first()
 
-    if user is None:
+    if user:
+        return jsonify(status="OK", message="User already registered"), 409
+
+    try:
         new_user = User(
             first_name=first_name,
             last_name=last_name,
@@ -247,8 +259,8 @@ def create_user_with_telegram():
         db.session.add(new_user)
         db.session.commit()
         return jsonify(status="OK", message="User successfully created"), 201
-
-    return jsonify(status="NOK", message="Operation Failed."), 500
+    except Exception as e:
+        return jsonify(status="NOK", message="Operation Failed.", error=f"{str(e)}"), 500
 
 
 async def send_email_to_unreachable_user():

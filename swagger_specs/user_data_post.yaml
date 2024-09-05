@@ -1,64 +1,95 @@
 tags: ["Telegram"]
-summary: "Receive user data from bot"
-description: "Endpoint to receive user data sent by the bot."
+summary: "Create a new user with Telegram data"
+description: "This endpoint receives user information sent by the bot and creates a new user."
 parameters:
-  - name: "body"
-    in: "body"
+  - name: "first_name"
+    in: "query"
     required: true
     schema:
-      type: "object"
-      properties:
-        first_name:
-          type: "string"
-          description: "The first name of the user."
-          example: "John"
-        last_name:
-          type: "string"
-          description: "The last name of the user."
-          example: "Doe"
-        email:
-          type: "string"
-          description: "The email address of the user."
-          example: "john.doe@example.com"
-        phone_number:
-          type: "string"
-          description: "The phone number of the user."
-          example: "5551234567"
-        chat_id:
-          type: "string"
-          description: "The chat ID of the user from Telegram."
-          example: "123456789"
-    required:
-      - first_name
-      - last_name
-      - email
-      - phone_number
-      - chat_id
+      type: string
+    description: "The user's first name."
+    example: "John"
+  - name: "last_name"
+    in: "query"
+    required: true
+    schema:
+      type: string
+    description: "The user's last name."
+    example: "Doe"
+  - name: "email"
+    in: "query"
+    required: true
+    schema:
+      type: string
+    description: "The user's email address."
+    example: "john.doe@example.com"
+  - name: "phone_number"
+    in: "query"
+    required: true
+    schema:
+      type: string
+    description: "The user's phone number."
+    example: "5551234567"
+  - name: "chat_id"
+    in: "query"
+    required: true
+    schema:
+      type: string
+    description: "The Telegram chat ID."
+    example: "123456789"
 responses:
   201:
-    description: "User created successfully"
+    description: "User successfully created"
     content:
       application/json:
-        examples:
-          application/json:
-            value:
-              status: "OK"
-              message: "User successfully created"
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            message:
+              type: string
+              example: "User successfully created"
   400:
-    description: "Missing or invalid information"
+    description: "Missing required user information"
     content:
       application/json:
-        examples:
-          application/json:
-            value:
-              status: "NOK"
-              message: "Missing information"
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Missing information"
+  409:
+    description: "User already exists"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            message:
+              type: string
+              example: "User already registered"
   500:
-    description: "Operation failed"
+    description: "Internal server error"
     content:
       application/json:
-        examples:
-          application/json:
-            value:
-              status: "NOK"
-              message: "Operation Failed."
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Operation Failed."
+            error:
+              type: string
+              example: "Detailed error message here."
