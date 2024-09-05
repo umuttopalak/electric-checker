@@ -121,7 +121,9 @@ def users_list():
         return jsonify(status="NOK", message='Operation Failed.'), 400
 
     users = User.query.all()
-    return jsonify(status='OK', message='Users retrieved successfully', data={'users': [user.to_dict() for user in users]}), 200
+    if users:
+        return jsonify(status='OK', message='Users retrieved successfully', data={'users': [user.to_dict() for user in users]}), 200
+    return jsonify(status='OK', message='Users retrieved successfully', data={'users': []}), 200
 
 
 @app.route('/admin/users/register', methods=['POST'])
