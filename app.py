@@ -24,7 +24,7 @@ mail = Mail(app)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
-bot = telegram.Bot(token=Config.TELEGRAM_API)
+bot = telegram.Bot(token=Config.TELEGRAM_TOKEN)
 
 
 class User(db.Model):
