@@ -1,3 +1,4 @@
+tags: ["admin"]
 parameters:
   - name: "email"
     in: "path"

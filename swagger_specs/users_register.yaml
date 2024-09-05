@@ -1,8 +1,12 @@
+tags: ["admin"]
+summary: "Register a new user"
+description: "This endpoint registers a new user with an empty chat_id."
 parameters:
   - name: "admin-key"
     in: "header"
-    type: "string"
     required: true
+    schema:
+      type: "string"
     description: "The admin key to authenticate the request."
   - name: "body"
     in: "body"
@@ -10,23 +14,76 @@ parameters:
     schema:
       type: "object"
       properties:
+        first_name:
+          type: "string"
+          description: "First name of the new user."
+          example: "John"
+        last_name:
+          type: "string"
+          description: "Last name of the new user."
+          example: "Doe"
         email:
           type: "string"
-          description: "The email of the new user."
-      required:
-        - "email"
+          description: "Email address of the new user."
+          example: "john.doe@example.com"
+        phone_number:
+          type: "string"
+          description: "Phone number of the new user."
+          example: "5551234567"
+    required:
+      - first_name
+      - last_name
+      - email
+      - phone_number
 responses:
   201:
-    description: "User created"
-    examples:
+    description: "User created successfully"
+    content:
       application/json:
-        status: "OK"
-        message: "User created"
-        data:
-          user:
-            username: "new-user-uuid"
-            email: "newuser@mail.com"
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            message:
+              type: string
+              example: "User created"
+            data:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                      example: "new-user-uuid"
+                    email:
+                      type: string
+                      example: "john.doe@example.com"
   400:
-    description: "Invalid or missing admin key or email is required"
+    description: "Invalid or missing admin key or required field"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Invalid or missing admin key or required field"
   409:
     description: "Email already registered"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Email already registered"
