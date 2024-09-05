@@ -122,7 +122,24 @@ def create_user():
     return jsonify(status='OK', message='User created', data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
 
 
+@app.route('/admin/users/delete/', methods=['DELETE'])
+@swag_from('swagger_specs/users_register.yaml')
+def delete_user():
+    data = request.get_json()
+    email = data.get('email', None)
+    if email is None:
+        return jsonify(status="NOK", message='Email is Required.'), 400
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify(status="NOK", message='User not found'), 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify(status="OK", message='User deleted successfully'), 200
+
+
 @app.route('/admin/send-test-email')
+@swag_from('swagger_specs/users_delete.yaml')
 def send_test_email():
     send_mail("Deneme", "umuttopalak@hotmail.com", "zort")
     return "Email sent successfully!"
@@ -142,8 +159,7 @@ def send_email_to_unreachable_user():
             print(f"Mail(s) sended to : f{inactive_users}")
 
 
-scheduler.add_job(func=send_email_to_unreachable_user,
-                  trigger="interval", hours=12)
+scheduler.add_job(func=send_email_to_unreachable_user,trigger="interval", seconds=20)
 
 if __name__ == '__main__':
     with app.app_context():
