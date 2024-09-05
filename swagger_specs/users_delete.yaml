@@ -1,0 +1,25 @@
+parameters:
+  - name: "email"
+    in: "path"
+    type: "string"
+    required: true
+    description: "The email of the user to be deleted."
+responses:
+  200:
+    description: "User deleted successfully"
+    examples:
+      application/json:
+        status: "OK"
+        message: "User deleted successfully"
+  404:
+    description: "User not found"
+    examples:
+      application/json:
+        status: "NOK"
+        message: "User not found"
+  502:
+    description: "Bad Gateway"
+    examples:
+      application/json:
+        status: "NOK"
+        message: "An error occurred"
