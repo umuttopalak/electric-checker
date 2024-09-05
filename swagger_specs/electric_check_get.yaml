@@ -1,3 +1,4 @@
+tags: ["user"]
 parameters:
   - name: "username"
     in: "query"

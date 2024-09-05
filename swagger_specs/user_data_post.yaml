@@ -1,0 +1,64 @@
+tags: ["Telegram"]
+summary: "Receive user data from bot"
+description: "Endpoint to receive user data sent by the bot."
+parameters:
+  - name: "body"
+    in: "body"
+    required: true
+    schema:
+      type: "object"
+      properties:
+        first_name:
+          type: "string"
+          description: "The first name of the user."
+          example: "John"
+        last_name:
+          type: "string"
+          description: "The last name of the user."
+          example: "Doe"
+        email:
+          type: "string"
+          description: "The email address of the user."
+          example: "john.doe@example.com"
+        phone_number:
+          type: "string"
+          description: "The phone number of the user."
+          example: "5551234567"
+        chat_id:
+          type: "string"
+          description: "The chat ID of the user from Telegram."
+          example: "123456789"
+    required:
+      - first_name
+      - last_name
+      - email
+      - phone_number
+      - chat_id
+responses:
+  201:
+    description: "User created successfully"
+    content:
+      application/json:
+        examples:
+          application/json:
+            value:
+              status: "OK"
+              message: "User successfully created"
+  400:
+    description: "Missing or invalid information"
+    content:
+      application/json:
+        examples:
+          application/json:
+            value:
+              status: "NOK"
+              message: "Missing information"
+  500:
+    description: "Operation failed"
+    content:
+      application/json:
+        examples:
+          application/json:
+            value:
+              status: "NOK"
+              message: "Operation Failed."

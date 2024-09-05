@@ -1,6 +1,8 @@
+import asyncio
 import uuid
 from datetime import datetime, timedelta
 
+import telegram
 from apscheduler.schedulers.background import BackgroundScheduler
 from flasgger import Swagger, swag_from
 from flask import Flask, jsonify, request
@@ -22,19 +24,37 @@ mail = Mail(app)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
+bot = telegram.Bot(token=Config.TELEGRAM_TOKEN)
+
 
 class User(db.Model):
-    username = db.Column(db.String(36), primary_key=True, unique=True,
-                         nullable=False, default=lambda: str(uuid.uuid4()))
+    username = db.Column(db.String(36), primary_key=True, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     email = db.Column(db.String(200), unique=True, nullable=False)
     last_request_date = db.Column(db.DateTime, nullable=True)
+    has_license = db.Column(db.Boolean, default=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(20), unique=True, nullable=False)
+    chat_id = db.Column(db.String(50), unique=True, nullable=False)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
+    def to_dict(self):
+        return {
+            "username": self.username,
+            "email": self.email,
+            "last_request_date": None if self.last_request_date is None else self.last_request_date.isoformat(),
+            "has_license": True if self.has_license else False,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "phone_number": self.phone_number,
+            "chat_id": self.chat_id,
+        }
 
-def send_mail(subject, recipient, body):
-    print(recipient)
+
+async def send_information(subject, recipient, body, chat_id):
+    # mail
     msg = Message(
         subject=subject,
         sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
@@ -42,6 +62,10 @@ def send_mail(subject, recipient, body):
         body=body
     )
     mail.send(msg)
+
+    # telegram message
+    message = await bot.send_message(chat_id=chat_id, text=body)
+    print(message)
 
 
 @app.route('/')
@@ -64,7 +88,7 @@ def post_electric_check():
     if username is None:
         return jsonify(message='Username is required'), 400
 
-    user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username, has_license=True).first()
     if user is None:
         return jsonify(message='User not found'), 404
 
@@ -81,7 +105,7 @@ def get_electric_check():
     if username is None:
         return jsonify(message='Username is required'), 400
 
-    user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username, has_license=True).first()
     if user is None:
         return jsonify(message='User not found'), 404
 
@@ -96,34 +120,45 @@ def users_list():
         return jsonify(status="NOK", message='Operation Failed.'), 400
 
     users = User.query.all()
-    return jsonify(status='OK', message='Users retrieved successfully', data={'users': [{'username': user.username, 'email': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None} for user in users]}), 200
+    return jsonify(status='OK', message='Users retrieved successfully', data={'users': [user.to_dict() for user in users]}), 200
 
 
 @app.route('/admin/users/register', methods=['POST'])
 @swag_from('swagger_specs/users_register.yaml')
 def create_user():
+    """This endpoint registers a new user."""
     admin_key_request = request.headers.get('admin-key', None)
     if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
         return jsonify(status="NOK", message='Invalid or missing admin key'), 400
 
     data = request.get_json()
-    email = data.get('email')
 
-    if email is None:
-        return jsonify(status="NOK", message='Email is required'), 400
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    email = data.get('email')
+    phone_number = data.get('phone_number')
+
+    if not all([first_name, last_name, email, phone_number]):
+        return jsonify(status="NOK", message="Missing information"), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify(status="NOK", message='Email already registered'), 409
 
-    new_user = User(email=email)
+    new_user = User(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        phone_number=phone_number,
+        chat_id="default"
+    )
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify(status='OK', message='User created', data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
+    return jsonify(status="OK", message="User created", data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
 
 
 @app.route('/admin/users/delete/', methods=['DELETE'])
-@swag_from('swagger_specs/users_register.yaml')
+@swag_from('swagger_specs/users_delete.yaml')
 def delete_user():
     data = request.get_json()
     email = data.get('email', None)
@@ -138,14 +173,85 @@ def delete_user():
     return jsonify(status="OK", message='User deleted successfully'), 200
 
 
+@app.route('/admin/license/deactivate/<username>', methods=['PATCH'])
+@swag_from('swagger_specs/license_deactivate.yaml')
+def deactivate_license(username):
+    """This endpoint allows an admin to deactivate a user's license."""
+    admin_key = request.headers.get('admin-key')
+
+    if admin_key is None or admin_key != Config.ADMIN_KEY:
+        return jsonify(status="NOK", message="Invalid or missing admin key"), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        return jsonify(status="NOK", message="User not found"), 404
+
+    user.has_license = False
+    db.session.commit()
+
+    return jsonify(status="OK", message="License deactivated"), 200
+
+
+@app.route('/admin/license/activate/<username>', methods=['PATCH'])
+@swag_from('swagger_specs/license_activate.yaml')
+def activate_license(username):
+    """This endpoint allows an admin to activate a user's license."""
+    admin_key = request.headers.get('admin-key')
+
+    if admin_key is None or admin_key != Config.ADMIN_KEY:
+        return jsonify(status="NOK", message="Invalid or missing admin key"), 400
+
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        return jsonify(status="NOK", message="User not found"), 404
+
+    user.has_license = True
+    db.session.commit()
+
+    return jsonify(status="OK", message="License activated"), 200
+
+
 @app.route('/admin/send-test-email')
-@swag_from('swagger_specs/users_delete.yaml')
+@swag_from('swagger_specs/send_test_email.yaml')
 def send_test_email():
-    send_mail("Deneme", "umuttopalak@hotmail.com", "zort")
+    # Default admin user will be added
+    # send_information()
     return "Email sent successfully!"
 
 
-def send_email_to_unreachable_user():
+@app.route('/telegram/user-data', methods=['POST'])
+@swag_from('swagger_specs/user_data_post.yaml')
+def create_user_with_telegram():
+    """This endpoint receives user information sent by the bot."""
+    data = request.get_json()
+
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    email = data.get('email')
+    phone_number = data.get('phone_number')
+    chat_id = data.get('chat_id')
+
+    if not all([first_name, last_name, email, phone_number, chat_id]):
+        return jsonify(status="NOK", message="Missing information"), 400
+
+    user = User.query.filter_by(chat_id=chat_id).first()
+
+    if user is None:
+        new_user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone_number=phone_number,
+            chat_id=chat_id
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(status="OK", message="User successfully created"), 201
+
+    return jsonify(status="NOK", message="Operation Failed."), 500
+
+
+async def send_email_to_unreachable_user():
     with app.app_context():
         one_minute_ago = datetime.now() - timedelta(minutes=1)
         inactive_users = User.query.filter(
@@ -153,13 +259,19 @@ def send_email_to_unreachable_user():
         print(f"inactive users -> {inactive_users}")
         if inactive_users:
             for user in inactive_users:
-                send_mail(subject="Dikkat!", recipient=user.email,
-                          body=f"Sayın kullanıcımız bir süredir elektriğinize ulaşamıyoruz.")
+                await send_information(subject="Dikkat!",
+                                       recipient=user.email,
+                                       chat_id='5496812621',
+                                       body=f"Sayın kullanıcımız bir süredir elektriğinize ulaşamıyoruz.")
 
             print(f"Mail(s) sended to : f{inactive_users}")
 
 
-scheduler.add_job(func=send_email_to_unreachable_user,trigger="interval", seconds=20)
+def run_async_task():
+    asyncio.run(send_email_to_unreachable_user())
+
+
+# scheduler.add_job(func=run_async_task, trigger="interval", seconds=20000)
 
 if __name__ == '__main__':
     with app.app_context():

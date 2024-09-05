@@ -1,0 +1,56 @@
+tags: ["admin"]
+summary: "Deactivate user license"
+description: "This endpoint allows an admin to deactivate the license of a user."
+parameters:
+  - name: "admin-key"
+    in: "header"
+    required: true
+    schema:
+      type: "string"
+    description: "The admin key to authenticate the request."
+  - name: "username"
+    in: "path"
+    required: true
+    schema:
+      type: "string"
+    description: "The username of the user whose license is being deactivated."
+responses:
+  200:
+    description: "License deactivated successfully"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            message:
+              type: string
+              example: "License deactivated"
+  400:
+    description: "Invalid or missing admin key or username"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Invalid or missing admin key or username"
+  404:
+    description: "User not found"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "User not found"
