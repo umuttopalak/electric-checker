@@ -22,8 +22,8 @@ migrate = Migrate(app, db)
 swagger = Swagger(app, config=Config.SWAGGER_CONFIG)
 mail = Mail(app)
 
-scheduler = BackgroundScheduler()
-scheduler.start()
+# scheduler = BackgroundScheduler()
+# scheduler.start()
 
 bot = telegram.Bot(token=Config.TELEGRAM_TOKEN)
 
@@ -55,18 +55,22 @@ class User(db.Model):
 
 
 async def send_information(subject, recipient, body, chat_id):
-    # mail
-    msg = Message(
-        subject=subject,
-        sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
-        recipients=[recipient],
-        body=body
-    )
-    mail.send(msg)
-
+    try:
+        # mail
+        msg = Message(
+            subject=subject,
+            sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
+            recipients=[recipient],
+            body=body
+        )
+        mail.send(msg)
+    except Exception as e:
+        print(f"Error while sending mail to : {recipient}")
     # telegram message
-    message = await bot.send_message(chat_id=chat_id, text=body)
-    print(message)
+    try:
+        message = await bot.send_message(chat_id=chat_id, text=body)
+    except Exception as e:
+        print(f"Error while sending telegram message to : {recipient}")
 
 
 @app.route('/')
@@ -225,6 +229,32 @@ def send_test_email():
     # send_information()
     return "Email sent successfully!"
 
+
+@app.route('/admin/periodic-check')
+@swag_from('swagger_specs/periodic_check.yaml')
+def periodic_check():
+    admin_key = request.headers.get('admin-key')
+
+    if admin_key is None or admin_key != Config.ADMIN_KEY:
+        return jsonify(status="NOK", message="Invalid or missing admin key"), 400
+    
+    one_minute_ago = datetime.now() - timedelta(minutes=1)
+    inactive_users = User.query.filter(User.last_request_date < one_minute_ago).all()
+    print(f"inactive users -> {inactive_users}")
+    
+    if inactive_users:
+        for user in inactive_users:
+            print(user)
+            asyncio.run(send_information(
+                subject="Dikkat!",
+                recipient=user.email,
+                chat_id=user.chat_id,
+                body=f"Sayın kullanıcımız bir süredir elektriğinize ulaşamıyoruz."
+            ))
+
+        print(f"Mail(s) sent to: {inactive_users}")
+
+    return "Periodic Check Started!"
 
 @app.route('/telegram/user-data', methods=['POST'])
 @swag_from('swagger_specs/user_data_post.yaml')
