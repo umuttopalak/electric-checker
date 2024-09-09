@@ -61,7 +61,7 @@ async def send_information(subject, recipient, body, chat_id):
             subject=subject,
             sender=str(app.config.get("MAIL_DEFAULT_SENDER")),
             recipients=[recipient],
-            body=body
+            html=body
         )
         mail.send(msg)
     except Exception as e:
@@ -249,7 +249,7 @@ def periodic_check():
                 subject="Dikkat!",
                 recipient=user.email,
                 chat_id=user.chat_id,
-                body=f"Sayın kullanıcımız bir süredir elektriğinize ulaşamıyoruz."
+                body=Config.MAIL_BODY
             ))
 
         print(f"Mail(s) sent to: {inactive_users}")
