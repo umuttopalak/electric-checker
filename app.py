@@ -93,6 +93,7 @@ class LogTypeEnum(PyEnum):
     ERROR_DATABASE = "ERROR_DATABASE"
     ERROR_NOTIFICATION = "ERROR_NOTIFICATION"
 
+    ADMIN_LOG_TYPE_LIST_VIEWED = "ADMIN_LOG_TYPE_LIST_VIEWED"
     ADMIN_USER_LIST_VIEWED = "ADMIN_USER_LIST_VIEWED"
     ADMIN_USER_REGISTERED = "ADMIN_USER_REGISTERED"
     ADMIN_USER_DELETED = "ADMIN_USER_DELETED"
@@ -270,9 +271,10 @@ def get_logs():
 
     page = request.headers.get('X-Page', 1, type=int)
     per_page = request.headers.get('X-Per-Page', 10, type=int)
+    log_type = request.headers.get('X-Log-Type', "SYSTEM_STARTUP", type=str)
 
     try:
-        logs_query = Log.query.order_by(Log.timestamp.desc())
+        logs_query = Log.query.filter_by(log_type=log_type).order_by(Log.timestamp.desc())
         paginated_logs = logs_query.paginate(page=page, per_page=per_page, error_out=False)
 
         logs_data = [log.to_dict() for log in paginated_logs.items]
@@ -551,6 +553,28 @@ def periodic_check():
             ))
 
     return "Periodic Check Started!"
+
+
+@app.route('/admin/log-type/list')
+@swag_from('swagger_specs/list_log_types.yaml')
+def list_log_types():
+    admin_key = request.headers.get('admin-key')
+    
+    if admin_key is None or admin_key != Config.ADMIN_KEY:
+        log_message(
+            level="ERROR",
+            message="Invalid or missing admin key for periodic check.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
+        return jsonify(status="NOK", message="Invalid or missing admin key"), 400
+    
+    log_types = [log_type.value for log_type in LogTypeEnum]
+    log_message(
+            level="INFO",
+            message="Listed log types by admin.",
+            log_type=LogTypeEnum.ADMIN_LOG_TYPE_LIST_VIEWED
+        )
+    return jsonify(status="OK", message="Log types listed.", data=log_types), 200
 
 
 @app.route('/telegram/user-data', methods=['POST'])
