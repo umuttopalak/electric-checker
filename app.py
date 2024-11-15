@@ -169,7 +169,10 @@ async def send_information(subject, recipient, body, chat_id):
 @swag_from('swagger_specs/hello_world.yaml')
 def hello_world():
     log_message(
-        level="INFO", message="Hello World endpoint was accessed.", username=None)
+        level="INFO",
+        message="Hello World endpoint was accessed.",
+        log_type=LogTypeEnum.SYSTEM_STARTUP
+    )
     return jsonify(message='Hello World'), 200
 
 
@@ -177,7 +180,10 @@ def hello_world():
 @swag_from('swagger_specs/health_check.yaml')
 def health_check():
     log_message(
-        level="INFO", message="Health check was performed.", username=None)
+        level="INFO",
+        message="Health check was performed.",
+        log_type=LogTypeEnum.HEALTH_CHECK
+    )
     return jsonify(status='OK', message="System Working!"), 200
 
 
@@ -186,22 +192,34 @@ def health_check():
 def post_electric_check():
     data = request.get_json()
     username = data.get('username', None)
+
     if username is None:
         log_message(
-            level="ERROR", message="Username is required for electric check.", username=None)
+            level="ERROR",
+            message="Username is required for electric check.",
+            log_type=LogTypeEnum.ELECTRIC_CHECK_INVALID_REQUEST
+        )
         return jsonify(message='Username is required'), 400
 
     user = User.query.filter_by(username=username, has_license=True).first()
     if user is None:
         log_message(
-            level="ERROR", message="User not found for electric check.", username=username)
+            level="ERROR",
+            message="User not found for electric check.",
+            username=username,
+            log_type=LogTypeEnum.ELECTRIC_CHECK_USER_NOT_FOUND
+        )
         return jsonify(message='User not found'), 404
 
     last_request_date = datetime.now()
     user.last_request_date = last_request_date
     db.session.commit()
     log_message(
-        level="INFO", message="Electric check completed and last request date updated.", username=username)
+        level="INFO",
+        message="Electric check completed and last request date updated.",
+        username=username,
+        log_type=LogTypeEnum.ELECTRIC_CHECK_SUCCESS
+    )
     return jsonify(status='OK', message='Last request date updated', data={'user': user.email, 'last_request_date': last_request_date.isoformat()}), 200
 
 
@@ -209,19 +227,31 @@ def post_electric_check():
 @swag_from('swagger_specs/electric_check_get.yaml')
 def get_electric_check():
     username = request.args.get('username', None)
+
     if username is None:
         log_message(
-            level="ERROR", message="Username is required for electric check retrieval.", username=None)
+            level="ERROR",
+            message="Username is required for electric check retrieval.",
+            log_type=LogTypeEnum.ELECTRIC_CHECK_INVALID_REQUEST
+        )
         return jsonify(message='Username is required'), 400
 
     user = User.query.filter_by(username=username, has_license=True).first()
     if user is None:
         log_message(
-            level="ERROR", message="User not found for electric check retrieval.", username=username)
+            level="ERROR",
+            message="User not found for electric check retrieval.",
+            username=username,
+            log_type=LogTypeEnum.ELECTRIC_CHECK_USER_NOT_FOUND
+        )
         return jsonify(message='User not found'), 404
 
     log_message(
-        level="INFO", message="Electric check retrieval successful.", username=username)
+        level="INFO",
+        message="Electric check retrieval successful.",
+        username=username,
+        log_type=LogTypeEnum.ELECTRIC_CHECK_RETRIEVAL
+    )
     return jsonify(status='OK', message='Last request date retrieved', data={'user': user.email, 'last_request_date': user.last_request_date.isoformat() if user.last_request_date else None}), 200
 
 
@@ -229,9 +259,13 @@ def get_electric_check():
 @swag_from('swagger_specs/logs_get.yaml')
 def get_logs():
     admin_key_request = request.headers.get('admin-key', None)
+
     if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for log retrieval.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for log retrieval.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message='Invalid or missing admin key'), 400
 
     page = request.headers.get('X-Page', 1, type=int)
@@ -254,12 +288,18 @@ def get_logs():
         }
 
         log_message(
-            level="INFO", message="Logs retrieved successfully by admin.", username=None)
+            level="INFO",
+            message="Logs retrieved successfully by admin.",
+            log_type=LogTypeEnum.ADMIN_LOGS_VIEWED
+        )
         return jsonify(status='OK', message='Logs retrieved successfully', data=response_data), 200
 
     except Exception as e:
         log_message(
-            level="ERROR", message=f"Error during log retrieval: {str(e)}", username=None)
+            level="ERROR",
+            message=f"Error during log retrieval: {str(e)}",
+            log_type=LogTypeEnum.ERROR_API
+        )
         return jsonify(status="NOK", message="An error occurred while retrieving logs"), 500
 
 
@@ -267,33 +307,46 @@ def get_logs():
 @swag_from('swagger_specs/users_list.yaml')
 def users_list():
     admin_key_request = request.headers.get('admin-key', None)
+
     if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for user list retrieval.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for user list retrieval.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message='Operation Failed.'), 400
 
     users = User.query.all()
     if users:
         log_message(
-            level="INFO", message="User list retrieved successfully by admin.", username=None)
+            level="INFO",
+            message="User list retrieved successfully by admin.",
+            log_type=LogTypeEnum.ADMIN_USER_LIST_VIEWED
+        )
         return jsonify(status='OK', message='Users retrieved successfully', data={'users': [user.to_dict() for user in users]}), 200
+
     log_message(
-        level="INFO", message="No users found during admin user list retrieval.", username=None)
+        level="INFO",
+        message="No users found during admin user list retrieval.",
+        log_type=LogTypeEnum.ADMIN_USER_LIST_VIEWED
+    )
     return jsonify(status='OK', message='Users retrieved successfully', data={'users': []}), 200
 
 
 @app.route('/admin/users/register', methods=['POST'])
 @swag_from('swagger_specs/users_register.yaml')
 def create_user():
-    """This endpoint registers a new user."""
     admin_key_request = request.headers.get('admin-key', None)
+
     if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for user registration.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for user registration.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message='Invalid or missing admin key'), 400
 
     data = request.get_json()
-
     first_name = data.get('first_name')
     last_name = data.get('last_name')
     email = data.get('email')
@@ -301,12 +354,18 @@ def create_user():
 
     if not all([first_name, last_name, email, phone_number]):
         log_message(
-            level="ERROR", message="Missing information for user registration.", username=None)
+            level="ERROR",
+            message="Missing information for user registration.",
+            log_type=LogTypeEnum.ERROR_API
+        )
         return jsonify(status="NOK", message="Missing information"), 400
 
     if User.query.filter_by(email=email).first():
         log_message(
-            level="ERROR", message="Email already registered during user registration.", username=None)
+            level="ERROR",
+            message="Email already registered during user registration.",
+            log_type=LogTypeEnum.USER_REGISTER
+        )
         return jsonify(status="NOK", message='Email already registered'), 409
 
     new_user = User(
@@ -318,10 +377,12 @@ def create_user():
     )
     db.session.add(new_user)
     db.session.commit()
-    log_message(level="INFO", message="New user registered successfully.",
-                username=new_user.username)
+    log_message(
+        level="INFO",
+        message="New user registered successfully.",
+        log_type=LogTypeEnum.ADMIN_USER_REGISTERED
+    )
     return jsonify(status="OK", message="User created", data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
-
 
 @app.route('/admin/users/delete/', methods=['DELETE'])
 @swag_from('swagger_specs/users_delete.yaml')
@@ -329,89 +390,126 @@ def delete_user():
     admin_key_request = request.headers.get('admin-key', None)
     if admin_key_request is None or admin_key_request != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for user deletion.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for user deletion.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message='Invalid or missing admin key'), 400
 
     data = request.get_json()
     email = data.get('email', None)
     if email is None:
         log_message(
-            level="ERROR", message="Email is required for user deletion.", username=None)
+            level="ERROR",
+            message="Email is required for user deletion.",
+            log_type=LogTypeEnum.ERROR_API
+        )
         return jsonify(status="NOK", message='Email is Required.'), 400
+
     user = User.query.filter_by(email=email).first()
     if not user:
-        log_message(level="ERROR",
-                    message="User not found for deletion.", username=None)
+        log_message(
+            level="ERROR",
+            message="User not found for deletion.",
+            log_type=LogTypeEnum.ADMIN_USER_DELETED
+        )
         return jsonify(status="NOK", message='User not found'), 404
 
     db.session.delete(user)
     db.session.commit()
-    log_message(level="INFO", message="User deleted successfully.",
-                username=user.username)
+    log_message(
+        level="INFO",
+        message="User deleted successfully.",
+        username=user.username,
+        log_type=LogTypeEnum.ADMIN_USER_DELETED
+    )
     return jsonify(status="OK", message='User deleted successfully'), 200
 
 
 @app.route('/admin/license/deactivate/<username>', methods=['PATCH'])
 @swag_from('swagger_specs/license_deactivate.yaml')
 def deactivate_license(username):
-    """This endpoint allows an admin to deactivate a user's license."""
     admin_key = request.headers.get('admin-key')
 
     if admin_key is None or admin_key != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for deactivating license.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for deactivating license.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message="Invalid or missing admin key"), 400
 
     user = User.query.filter_by(username=username).first()
     if user is None:
         log_message(
-            level="ERROR", message=f"User {username} not found for license deactivation.", username=username)
+            level="ERROR",
+            message=f"User {username} not found for license deactivation.",
+            username=username,
+            log_type=LogTypeEnum.ADMIN_LICENSE_DEACTIVATED
+        )
         return jsonify(status="NOK", message="User not found"), 404
 
     user.has_license = False
     db.session.commit()
     log_message(
-        level="INFO", message=f"License deactivated for user {username}.", username=username)
-
+        level="INFO",
+        message=f"License deactivated for user {username}.",
+        username=username,
+        log_type=LogTypeEnum.ADMIN_LICENSE_DEACTIVATED
+    )
     return jsonify(status="OK", message="License deactivated"), 200
 
 
 @app.route('/admin/license/activate/<username>', methods=['PATCH'])
 @swag_from('swagger_specs/license_activate.yaml')
 def activate_license(username):
-    """This endpoint allows an admin to activate a user's license."""
     admin_key = request.headers.get('admin-key')
 
     if admin_key is None or admin_key != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for activating license.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for activating license.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message="Invalid or missing admin key"), 400
 
     user = User.query.filter_by(username=username).first()
     if user is None:
         log_message(
-            level="ERROR", message=f"User {username} not found for license activation.", username=username)
+            level="ERROR",
+            message=f"User {username} not found for license activation.",
+            username=username,
+            log_type=LogTypeEnum.ADMIN_LICENSE_ACTIVATED
+        )
         return jsonify(status="NOK", message="User not found"), 404
 
     user.has_license = True
     db.session.commit()
     log_message(
-        level="INFO", message=f"License activated for user {username}.", username=username)
-
+        level="INFO",
+        message=f"License activated for user {username}.",
+        username=username,
+        log_type=LogTypeEnum.ADMIN_LICENSE_ACTIVATED
+    )
     return jsonify(status="OK", message="License activated"), 200
 
 
 @app.route('/admin/send-test-email')
 @swag_from('swagger_specs/send_test_email.yaml')
 def send_test_email():
-    # Default admin user will be added
     try:
         log_message(
-            level="INFO", message="Test email sent successfully.", username=None)
+            level="INFO",
+            message="Test email sent successfully.",
+            log_type=LogTypeEnum.ADMIN_TEST_EMAIL_SENT
+        )
         return "Email sent successfully!"
     except Exception as e:
         log_message(
-            level="ERROR", message=f"Failed to send test email. Error: {str(e)}", username=None)
+            level="ERROR",
+            message=f"Failed to send test email. Error: {str(e)}",
+            log_type=LogTypeEnum.ERROR_NOTIFICATION
+        )
         return "Failed to send email."
 
 
@@ -422,19 +520,29 @@ def periodic_check():
 
     if admin_key is None or admin_key != Config.ADMIN_KEY:
         log_message(
-            level="ERROR", message="Invalid or missing admin key for periodic check.", username=None)
+            level="ERROR",
+            message="Invalid or missing admin key for periodic check.",
+            log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
+        )
         return jsonify(status="NOK", message="Invalid or missing admin key"), 400
 
     two_hours_ago = datetime.now() - timedelta(hours=2)
     inactive_users = User.query.filter(
         User.last_request_date < two_hours_ago).all()
     log_message(
-        level="INFO", message=f"Periodic check performed, found {len(inactive_users)} inactive users.", username=None)
+        level="INFO",
+        message=f"Periodic check performed, found {len(inactive_users)} inactive users.",
+        log_type=LogTypeEnum.ADMIN_PERIODIC_CHECK_STARTED
+    )
 
     if inactive_users:
         for user in inactive_users:
             log_message(
-                level="INFO", message=f"Sending notification to user {user.username}.", username=user.username)
+                level="INFO",
+                message=f"Sending notification to user {user.username}.",
+                username=user.username,
+                log_type=LogTypeEnum.ADMIN_INACTIVE_USERS_NOTIFIED
+            )
             asyncio.run(send_information(
                 subject="Dikkat!",
                 recipient=user.email,
@@ -448,7 +556,6 @@ def periodic_check():
 @app.route('/telegram/user-data', methods=['POST'])
 @swag_from('swagger_specs/user_data_post.yaml')
 def create_user_with_telegram():
-    """This endpoint receives user information sent by the bot."""
     data = request.get_json()
 
     first_name = data.get('first_name')
@@ -459,7 +566,10 @@ def create_user_with_telegram():
 
     if not all([first_name, last_name, email, phone_number, chat_id]):
         log_message(
-            level="INFO", message=f"Missing information - {first_name, last_name, email, phone_number, chat_id} ", username=None)
+            level="ERROR",
+            message=f"Missing information - {first_name, last_name, email, phone_number, chat_id}.",
+            log_type=LogTypeEnum.ERROR_API
+        )
         return jsonify(status="NOK", message="Missing information"), 400
 
     user = User.query.filter(
@@ -470,7 +580,11 @@ def create_user_with_telegram():
 
     if user:
         log_message(
-            level="INFO", message=f"User already registered.", username=user.username)
+            level="INFO",
+            message="User already registered.",
+            username=user.username,
+            log_type=LogTypeEnum.USER_REGISTER
+        )
         return jsonify(status="OK", message="User already registered"), 409
 
     try:
@@ -484,11 +598,18 @@ def create_user_with_telegram():
         db.session.add(new_user)
         db.session.commit()
         log_message(
-            level="INFO", message=f"User created.", username=new_user.username)
+            level="INFO",
+            message="User created successfully.",
+            username=new_user.username,
+            log_type=LogTypeEnum.USER_REGISTER
+        )
         return jsonify(status="OK", message="User successfully created"), 201
     except Exception as e:
         log_message(
-            level="ERROR", message=f"Exception: {str(e)}", username=None)
+            level="ERROR",
+            message=f"Exception occurred while creating user: {str(e)}.",
+            log_type=LogTypeEnum.ERROR_API
+        )
         return jsonify(status="NOK", message="Operation Failed.", error=f"{str(e)}"), 500
 
 
