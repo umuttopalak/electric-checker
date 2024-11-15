@@ -130,8 +130,8 @@ class Log(db.Model):
         }
 
 
-def log_message(level, message, username=None):
-    new_log = Log(level=level, message=message, username=username)
+def log_message(level, message, username=None, log_type=None):
+    new_log = Log(level=level, message=message, username=username, log_type=log_type)
     db.session.add(new_log)
     db.session.commit()
     if level == "ERROR":
@@ -151,18 +151,18 @@ async def send_information(subject, recipient, body, chat_id):
         )
         mail.send(msg)
         log_message(
-            level="INFO", message=f"Email sent to {recipient}", username=None)
+            level="INFO", message=f"Email sent to {recipient}", username=None, log_type=LogTypeEnum.NOTIFICATION_EMAIL_SENT)
     except Exception as e:
         log_message(
-            level="ERROR", message=f"Error while sending mail to : {recipient} - {str(e)}")
+            level="ERROR", message=f"Error while sending mail to : {recipient} - {str(e)}", log_type=LogTypeEnum.ERROR_NOTIFICATION)
     # telegram message
     try:
         message = await bot.send_message(chat_id=chat_id, text=body)
         log_message(
-            level="INFO", message=f"Telegram message sent to {chat_id}", username=None)
+            level="INFO", message=f"Telegram message sent to {chat_id}", username=None, log_type=LogTypeEnum.NOTIFICATION_TELEGRAM_SENT)
     except Exception as e:
         log_message(
-            level="ERROR", message=f"Error while sending telegram message to : {chat_id} - {str(e)}")
+            level="ERROR", message=f"Error while sending telegram message to : {chat_id} - {str(e)}", log_type=LogTypeEnum.ERROR_NOTIFICATION)
 
 
 @app.route('/')
