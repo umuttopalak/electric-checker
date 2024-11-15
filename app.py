@@ -185,14 +185,33 @@ def get_logs():
             level="ERROR", message="Invalid or missing admin key for log retrieval.", username=None)
         return jsonify(status="NOK", message='Invalid or missing admin key'), 400
 
-    logs = Log.query.order_by(Log.timestamp.desc()).all()
-    if logs:
+    page = request.headers.get('X-Page', 1, type=int)
+    per_page = request.headers.get('X-Per-Page', 10, type=int)
+
+    try:
+        logs_query = Log.query.order_by(Log.timestamp.desc())
+        paginated_logs = logs_query.paginate(page=page, per_page=per_page, error_out=False)
+
+        logs_data = [log.to_dict() for log in paginated_logs.items]
+
+        response_data = {
+            'logs': logs_data,
+            'pagination': {
+                'page': paginated_logs.page,
+                'per_page': paginated_logs.per_page,
+                'total': paginated_logs.total,
+                'pages': paginated_logs.pages,
+            }
+        }
+
         log_message(
             level="INFO", message="Logs retrieved successfully by admin.", username=None)
-        return jsonify(status='OK', message='Logs retrieved successfully', data={'logs': [log.to_dict() for log in logs]}), 200
-    log_message(
-        level="INFO", message="No logs found during admin log retrieval.", username=None)
-    return jsonify(status='OK', message='No logs found', data={'logs': []}), 200
+        return jsonify(status='OK', message='Logs retrieved successfully', data=response_data), 200
+
+    except Exception as e:
+        log_message(
+            level="ERROR", message=f"Error during log retrieval: {str(e)}", username=None)
+        return jsonify(status="NOK", message="An error occurred while retrieving logs"), 500
 
 
 @app.route('/admin/users/list', methods=['GET'])
