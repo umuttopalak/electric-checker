@@ -20,6 +20,12 @@ parameters:
     type: "integer"
     description: "The number of logs per page. Default is 10."
     example: 10
+  - name: "X-Log-Type"
+    in: "header"
+    required: false
+    type: "string"
+    description: "The type of logs. Default is SYSTEM_STARTUP."
+    example: "SYSTEM_STARTUP"
 responses:
   200:
     description: "Logs retrieved successfully"

@@ -1,0 +1,43 @@
+tags:
+  - "admin"
+summary: "List all available log types"
+description: "This endpoint allows admins to list all predefined log types in the system."
+parameters:
+  - name: "admin-key"
+    in: "header"
+    required: true
+    schema:
+      type: string
+    description: "Admin key for authentication"
+responses:
+  200:
+    description: "Log types listed successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            message:
+              type: string
+              example: "Log types listed."
+            data:
+              type: array
+              items:
+                type: string
+              example: ["SYSTEM_STARTUP", "SYSTEM_SHUTDOWN", "ERROR_API"]
+  400:
+    description: "Invalid or missing admin key."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "Invalid or missing admin key"
