@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 from enum import Enum as PyEnum
 
+import psutil
 import telegram
 from apscheduler.schedulers.background import BackgroundScheduler
 from flasgger import Swagger, swag_from
@@ -11,7 +12,7 @@ from flask import Flask, jsonify, request
 from flask_mail import Mail, Message
 from flask_migrate import Migrate, upgrade
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Enum, or_
+from sqlalchemy import Enum, or_, text
 
 from config import Config
 
@@ -106,7 +107,6 @@ class LogTypeEnum(PyEnum):
     ADMIN_NOTIFICATION_SENT = "ADMIN_NOTIFICATION_SENT"
 
 
-
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -132,7 +132,8 @@ class Log(db.Model):
 
 
 def log_message(level, message, username=None, log_type=None):
-    new_log = Log(level=level, message=message, username=username, log_type=log_type)
+    new_log = Log(level=level, message=message,
+                  username=username, log_type=log_type)
     db.session.add(new_log)
     db.session.commit()
     if level == "ERROR":
@@ -186,6 +187,30 @@ def health_check():
         log_type=LogTypeEnum.HEALTH_CHECK
     )
     return jsonify(status='OK', message="System Working!"), 200
+
+
+@app.route('/detailed-health-check', methods=['GET'])
+def detailed_health_check():
+    try:
+        db.session.execute(text('SELECT 1'))
+        database_status = 'OK'
+    except Exception as e:
+        database_status = f'NOT OK: {str(e)}'
+
+    try:
+        telegram_status = asyncio.run(bot.get_me())
+        telegram_status = 'OK' if telegram_status else 'NOT OK'
+    except Exception as e:
+        telegram_status = f'NOT OK: {str(e)}'
+
+    health_status = {
+        'database': database_status,
+        'telegram_bot': telegram_status,
+        'cpu_usage': psutil.cpu_percent(),
+        'memory_usage': psutil.virtual_memory().percent,
+        'disk_usage': psutil.disk_usage('/').percent
+    }
+    return jsonify(health_status), 200
 
 
 @app.route('/user/electric-check', methods=['POST'])
@@ -274,8 +299,10 @@ def get_logs():
     log_type = request.headers.get('X-Log-Type', "SYSTEM_STARTUP", type=str)
 
     try:
-        logs_query = Log.query.filter_by(log_type=log_type).order_by(Log.timestamp.desc())
-        paginated_logs = logs_query.paginate(page=page, per_page=per_page, error_out=False)
+        logs_query = Log.query.filter_by(
+            log_type=log_type).order_by(Log.timestamp.desc())
+        paginated_logs = logs_query.paginate(
+            page=page, per_page=per_page, error_out=False)
 
         logs_data = [log.to_dict() for log in paginated_logs.items]
 
@@ -385,6 +412,7 @@ def create_user():
         log_type=LogTypeEnum.ADMIN_USER_REGISTERED
     )
     return jsonify(status="OK", message="User created", data={'user': {'username': new_user.username, 'email': new_user.email}}), 201
+
 
 @app.route('/admin/users/delete/', methods=['DELETE'])
 @swag_from('swagger_specs/users_delete.yaml')
@@ -559,7 +587,7 @@ def periodic_check():
 @swag_from('swagger_specs/list_log_types.yaml')
 def list_log_types():
     admin_key = request.headers.get('admin-key')
-    
+
     if admin_key is None or admin_key != Config.ADMIN_KEY:
         log_message(
             level="ERROR",
@@ -567,13 +595,13 @@ def list_log_types():
             log_type=LogTypeEnum.SECURITY_UNAUTHORIZED_ACCESS
         )
         return jsonify(status="NOK", message="Invalid or missing admin key"), 400
-    
+
     log_types = [log_type.value for log_type in LogTypeEnum]
     log_message(
-            level="INFO",
-            message="Listed log types by admin.",
-            log_type=LogTypeEnum.ADMIN_LOG_TYPE_LIST_VIEWED
-        )
+        level="INFO",
+        message="Listed log types by admin.",
+        log_type=LogTypeEnum.ADMIN_LOG_TYPE_LIST_VIEWED
+    )
     return jsonify(status="OK", message="Log types listed.", data=log_types), 200
 
 
