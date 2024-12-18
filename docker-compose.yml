@@ -33,26 +33,16 @@ services:
       - electric-checker-db
     ports:
       - "8000:8000"
-    restart: always
-
-  alembic:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: electric-checker-alembic
-    environment:
-      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
-    depends_on:
-      - electric-checker-db
-    entrypoint: >
+    command: >
       sh -c "
       while ! mysqladmin ping -h electric-checker-db --silent; do
         echo 'Waiting for database...';
         sleep 2;
       done;
-      alembic upgrade head
+      alembic upgrade head &&
+      gunicorn -w 4 -b 0.0.0.0:8000 app:app
       "
-    restart: "no"
+    restart: always
 
 volumes:
   db_data:

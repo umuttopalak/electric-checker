@@ -10,11 +10,16 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install additional tools for MySQL connectivity
+RUN apt-get update && apt-get install -y \
+    mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the application code
 COPY . .
 
 # Expose port 8000 for the application
 EXPOSE 8000
 
-# Start the application with Gunicorn
+# Default command (can be overridden by `docker-compose.yml`)
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
