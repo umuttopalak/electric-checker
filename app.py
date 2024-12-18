@@ -605,7 +605,7 @@ def list_log_types():
     return jsonify(status="OK", message="Log types listed.", data=log_types), 200
 
 
-@app.route('/telegram/user-data', methods=['POST'])
+@app.route('/telegram/user-data', methods=['POST'], )
 @swag_from('swagger_specs/user_data_post.yaml')
 def create_user_with_telegram():
     data = request.get_json()
