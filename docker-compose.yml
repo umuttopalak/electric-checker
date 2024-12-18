@@ -19,11 +19,16 @@ services:
       dockerfile: Dockerfile
     container_name: electric-checker-app
     environment:
-      - HOST=0.0.0.0
-      - USER=root
-      - PASSWORD=mypassword
-      - DATABASE=mylocaldb
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:mypassword@electric-checker-db:3306/mylocaldb
+      - HOST=${HOST}
+      - USER=${USER}
+      - PASSWORD=${PASSWORD}
+      - DATABASE=${DATABASE}
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+      - ADMIN_KEY=${ADMIN_KEY}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - TELEGRAM_TOKEN ${TELEGRAM_TOKEN}
     depends_on:
       - electric-checker-db
     ports:
