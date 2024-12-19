@@ -18,30 +18,18 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: electric-checker-app
+    env_file:
+      - .env
     environment:
-      - HOST=${HOST}
-      - USER=${USER}
-      - PASSWORD=${PASSWORD}
-      - DATABASE=${DATABASE}
-      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
-      - ADMIN_KEY=${ADMIN_KEY}
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
-      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - HOST=0.0.0.0
+      - USER=root
+      - PASSWORD=mypassword
+      - DATABASE=mylocaldb
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:mypassword@electric-checker-db:3306/mylocaldb
     depends_on:
       - electric-checker-db
     ports:
       - "8000:8000"
-    command: >
-      sh -c "
-      while ! mysqladmin ping -h electric-checker-db --silent; do
-        echo 'Waiting for database...';
-        sleep 2;
-      done;
-      alembic upgrade head &&
-      gunicorn -w 4 -b 0.0.0.0:8000 app:app
-      "
     restart: always
 
 volumes:

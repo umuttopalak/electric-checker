@@ -20,7 +20,7 @@ class Config:
     DB_DATABASE = os.environ.get("DATABASE")
     TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}")
+        "SQLALCHEMY_DATABASE_URI", f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}?allowPublicKeyRetrieval=true&useSSL=false")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SWAGGER_CONFIG = {
         "headers": [],
