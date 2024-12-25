@@ -190,6 +190,7 @@ def health_check():
 
 
 @app.route('/detailed-health-check', methods=['GET'])
+@swag_from('swagger_specs/detailed_health_check.yaml')
 def detailed_health_check():
     try:
         db.session.execute(text('SELECT 1'))

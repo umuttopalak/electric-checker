@@ -12,29 +12,18 @@ class Config:
     MAIL_USE_SSL = False
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
-    ADMIN_KEY = os.environ.get("ADMIN_KEY")
-    DB_HOST = os.environ.get("HOST")
-    DB_USER = os.environ.get("USER")
-    DB_PASSWORD = os.environ.get("PASSWORD")
-    DB_DATABASE = os.environ.get("DATABASE")
-    TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}?allowPublicKeyRetrieval=true&useSSL=false")
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+    ADMIN_KEY = os.environ.get('ADMIN_KEY')
+    TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SWAGGER_CONFIG = {
-        "headers": [],
-        "specs": [
-            {
-                "endpoint": 'apispec_1',
-                "route": '/{}.json'.format('apispec_1'),
-                "rule_filter": lambda rule: True,
-                "model_filter": lambda tag: True,
-            }
-        ],
-        "static_url_path": "/flasgger_static",
-        "swagger_ui": True,
-        "specs_route": "/api/docs/swagger/"
+    SWAGGER = {
+        'title': 'Electric Checker API',
+        'uiversion': 3,
+        'specs_route': '/swagger/',
+        'openapi': '3.0.2',
+        'static_url_path': '/flasgger_static',
+        'swagger_ui': True
     }
     MAIL_BODY = """<!DOCTYPE html>
                 <html lang="tr">

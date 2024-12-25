@@ -1,6 +1,0 @@
-responses:
-  200:
-    description: "Welcome message"
-    examples:
-      application/json:
-        message: "Hello World"

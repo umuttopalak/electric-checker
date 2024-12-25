@@ -1,0 +1,14 @@
+tags:
+  - name: General
+    description: General endpoints
+summary: Hello World endpoint
+description: Returns a simple hello world message
+responses:
+  200:
+    description: Successful response
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Hello World" 

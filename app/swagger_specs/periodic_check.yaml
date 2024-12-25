@@ -1,0 +1,19 @@
+tags:
+  - name: Admin
+    
+summary: Run periodic check
+description: Checks for inactive users and sends notifications
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+responses:
+  200:
+    description: Periodic check started successfully
+    schema:
+      type: string
+      example: "Periodic Check Started!"
+  400:
+    description: Invalid or missing admin key

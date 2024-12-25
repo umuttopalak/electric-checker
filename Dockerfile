@@ -4,17 +4,32 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements file
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    default-libmysqlclient-dev \
+    pkg-config \
+    python3-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install mysqlclient
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the application code
+# Copy application code
 COPY . .
 
-# Expose port 8000 for the application
-EXPOSE 8000
+# Set environment variables
+ENV FLASK_APP=run.py
+ENV PYTHONPATH=/app
 
-# Default command (can be overridden by `docker-compose.yml`)
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
+# Expose port
+EXPOSE 3000
+
+# Run the application
+CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
+
+# Copy Swagger specs
+COPY app/swagger_specs /app/app/swagger_specs

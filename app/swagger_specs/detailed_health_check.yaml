@@ -1,0 +1,25 @@
+tags:
+  - name: System
+summary: Detailed health check endpoint
+description: Returns detailed system health information including database, telegram, CPU, memory and disk usage
+responses:
+  200:
+    description: System health details
+    schema:
+      type: object
+      properties:
+        database:
+          type: string
+          example: "OK"
+        telegram_bot:
+          type: string
+          example: "OK"
+        cpu_usage:
+          type: number
+          example: 45.2
+        memory_usage:
+          type: number
+          example: 68.5
+        disk_usage:
+          type: number
+          example: 72.1 

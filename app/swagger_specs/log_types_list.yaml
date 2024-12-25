@@ -1,0 +1,29 @@
+tags:
+  - name: Admin
+summary: List log types
+description: Returns a list of all available log types
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+responses:
+  200:
+    description: Log types retrieved successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "Log types listed"
+        data:
+          type: array
+          items:
+            type: string
+            example: ["SYSTEM_STARTUP", "USER_REGISTER", "ERROR_API"]
+  400:
+    description: Invalid or missing admin key 

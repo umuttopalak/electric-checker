@@ -1,0 +1,55 @@
+tags:
+  - name: Admin
+    
+summary: Register new user
+description: Creates a new user in the system
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          example: "john.doe@example.com"
+        phone_number:
+          type: string
+          example: "+901234567890"
+responses:
+  201:
+    description: User created successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "User created"
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+  400:
+    description: Missing information or invalid admin key
+  409:
+    description: Email already registered

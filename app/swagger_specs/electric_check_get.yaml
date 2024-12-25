@@ -1,0 +1,35 @@
+tags:
+  - name: User
+summary: Get user's last electric check
+description: Retrieves the last request date for a user's electric check
+parameters:
+  - name: username
+    in: query
+    type: string
+    required: true
+    description: User's unique identifier
+responses:
+  200:
+    description: Last request date retrieved successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "Last request date retrieved"
+        data:
+          type: object
+          properties:
+            user:
+              type: string
+              example: "user@example.com"
+            last_request_date:
+              type: string
+              example: "2023-12-25T12:00:00"
+  400:
+    description: Username is required
+  404:
+    description: User not found 

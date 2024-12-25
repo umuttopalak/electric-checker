@@ -1,0 +1,73 @@
+tags:
+  - name: Admin
+    
+summary: Get system logs
+description: Retrieves paginated system logs filtered by log type
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+  - name: X-Page
+    in: header
+    type: integer
+    default: 1
+    description: Page number for pagination
+  - name: X-Per-Page
+    in: header
+    type: integer
+    default: 10
+    description: Number of items per page
+  - name: X-Log-Type
+    in: header
+    type: string
+    default: "SYSTEM_STARTUP"
+    description: Type of logs to retrieve
+responses:
+  200:
+    description: Logs retrieved successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "Logs retrieved successfully"
+        data:
+          type: object
+          properties:
+            logs:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  timestamp:
+                    type: string
+                  level:
+                    type: string
+                  message:
+                    type: string
+                  username:
+                    type: string
+                  log_type:
+                    type: string
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                per_page:
+                  type: integer
+                total:
+                  type: integer
+                pages:
+                  type: integer
+  400:
+    description: Invalid or missing admin key
+  500:
+    description: Error retrieving logs

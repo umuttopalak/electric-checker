@@ -1,0 +1,32 @@
+tags:
+  - name: Admin
+
+summary: Deactivate user license
+description: Deactivates the license for a specific user
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+  - name: username
+    in: path
+    type: string
+    required: true
+    description: Username of the user
+responses:
+  200:
+    description: License deactivated successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "License deactivated"
+  400:
+    description: Invalid or missing admin key
+  404:
+    description: User not found
