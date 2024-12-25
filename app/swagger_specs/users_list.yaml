@@ -1,0 +1,48 @@
+tags:
+  - name: Admin
+summary: List all users
+description: Retrieves a list of all registered users
+parameters:
+  - name: admin-key
+    in: header
+    type: string
+    required: true
+    description: Admin API key for authentication
+responses:
+  200:
+    description: Users retrieved successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "Users retrieved successfully"
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  last_request_date:
+                    type: string
+                  has_license:
+                    type: boolean
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+                  phone_number:
+                    type: string
+                  chat_id:
+                    type: string
+  400:
+    description: Invalid or missing admin key

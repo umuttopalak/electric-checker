@@ -1,0 +1,13 @@
+tags:
+  - name: Admin
+    
+summary: Send test email
+description: Sends a test email to verify email configuration
+responses:
+  200:
+    description: Test email sent successfully
+    schema:
+      type: string
+      example: "Email sent successfully!"
+  500:
+    description: Failed to send email

@@ -1,5 +1,5 @@
 tags:
-  - "admin"
+  - name: Admin
 summary: "List all available log types"
 description: "This endpoint allows admins to list all predefined log types in the system."
 parameters:

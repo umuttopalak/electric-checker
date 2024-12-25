@@ -1,36 +1,47 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  electric-checker-db:
-    image: mysql:latest
-    container_name: electric-checker-db
+  web:
+    build: .
+    ports:
+      - "3000:3000"
     environment:
-      MYSQL_ROOT_PASSWORD: mypassword
-      MYSQL_DATABASE: mylocaldb
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - ADMIN_KEY=${ADMIN_KEY}
+      - HOST=db
+      - USER=${DB_USER}
+      - PASSWORD=${DB_PASSWORD}
+      - DATABASE=${DB_NAME}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8.0
     ports:
       - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: always
-
-  electric-checker-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: electric-checker-app
-    env_file:
-      - .env
     environment:
-      - HOST=0.0.0.0
-      - USER=root
-      - PASSWORD=mypassword
-      - DATABASE=mylocaldb
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:mypassword@electric-checker-db:3306/mylocaldb
-    depends_on:
-      - electric-checker-db
-    ports:
-      - "8000:8000"
-    restart: always
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
 
 volumes:
-  db_data:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge

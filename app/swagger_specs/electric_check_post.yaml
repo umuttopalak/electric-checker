@@ -1,0 +1,39 @@
+tags:
+  - name: User
+summary: Update user's last electric check
+description: Updates the last request date for a user's electric check
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+responses:
+  200:
+    description: Last request date updated successfully
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "Last request date updated"
+        data:
+          type: object
+          properties:
+            user:
+              type: string
+              example: "user@example.com"
+            last_request_date:
+              type: string
+              example: "2023-12-25T12:00:00"
+  400:
+    description: Username is required
+  404:
+    description: User not found 

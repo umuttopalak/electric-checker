@@ -1,0 +1,16 @@
+tags:
+  - name: System
+summary: Health check endpoint
+description: Checks if the system is working properly
+responses:
+  200:
+    description: System is working
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "OK"
+        message:
+          type: string
+          example: "System Working!" 

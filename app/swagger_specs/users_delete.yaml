@@ -1,6 +1,7 @@
-tags: ["admin"]
-summary: "Deactivate user license"
-description: "This endpoint allows an admin to deactivate the license of a user."
+tags:
+  - name: Admin
+summary: "Delete a user by email"
+description: "Deletes a user from the system using their email address. Requires an admin key."
 parameters:
   - name: "admin-key"
     in: "header"
@@ -8,15 +9,20 @@ parameters:
     schema:
       type: "string"
     description: "The admin key to authenticate the request."
-  - name: "username"
-    in: "path"
+  - name: "body"
+    in: "body"
     required: true
     schema:
-      type: "string"
-    description: "The username of the user whose license is being deactivated."
+      type: object
+      properties:
+        email:
+          type: string
+          description: "The email of the user to be deleted."
+      required:
+        - email
 responses:
   200:
-    description: "License deactivated successfully"
+    description: "User deleted successfully"
     content:
       application/json:
         schema:
@@ -27,9 +33,9 @@ responses:
               example: "OK"
             message:
               type: string
-              example: "License deactivated"
+              example: "User deleted successfully"
   400:
-    description: "Invalid or missing admin key or username"
+    description: "Invalid or missing admin key or email required"
     content:
       application/json:
         schema:
@@ -40,7 +46,7 @@ responses:
               example: "NOK"
             message:
               type: string
-              example: "Invalid or missing admin key or username"
+              example: "Invalid or missing admin key or email is required"
   404:
     description: "User not found"
     content:
@@ -54,3 +60,16 @@ responses:
             message:
               type: string
               example: "User not found"
+  502:
+    description: "An error occurred while deleting the user"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "NOK"
+            message:
+              type: string
+              example: "An error occurred"
