@@ -3,44 +3,28 @@ version: '3.8'
 services:
   web:
     build: .
+    command: >
+      sh -c "flask db upgrade &&
+             gunicorn --workers 4 --bind 0.0.0.0:3003 wsgi:app"
     ports:
-      - "3000:3000"
+      - "3003:3003"
     environment:
-      - FLASK_APP=run.py
+      - FLASK_APP=wsgi.py
       - FLASK_ENV=development
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
       - ADMIN_KEY=${ADMIN_KEY}
-      - HOST=db
+      - HOST=${DB_HOST}
       - USER=${DB_USER}
       - PASSWORD=${DB_PASSWORD}
       - DATABASE=${DB_NAME}
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
-    depends_on:
-      - db
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - .:/app
     networks:
       - app-network
-
-  db:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
-volumes:
-  mysql_data:
 
 networks:
   app-network:

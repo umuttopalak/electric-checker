@@ -7,16 +7,14 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
     python3-dev \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install mysqlclient
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -26,10 +24,10 @@ ENV FLASK_APP=run.py
 ENV PYTHONPATH=/app
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3003
 
 # Run the application
-CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3003", "wsgi:app"]
 
 # Copy Swagger specs
 COPY app/swagger_specs /app/app/swagger_specs
