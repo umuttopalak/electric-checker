@@ -6,6 +6,7 @@ from flasgger import Swagger
 import telegram
 from config import Config
 
+# Initialize Flask extensions
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
@@ -21,8 +22,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     
     # Initialize Swagger
-    swagger = Swagger(app, 
-        template = {
+    swagger = Swagger(app, template={
         'title': 'Electric Checker API',
         'uiversion': 3,
         'specs_route': '/swagger/',
@@ -44,4 +44,5 @@ def create_app(config_class=Config):
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(telegram_bp, url_prefix='/telegram')
     app.register_blueprint(root_bp, url_prefix='/')
+
     return app 

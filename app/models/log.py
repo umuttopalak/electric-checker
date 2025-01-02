@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum as PyEnum
 from app import db
+from sqlalchemy import Enum
 
 class LogTypeEnum(PyEnum):
     SYSTEM_STARTUP = "SYSTEM_STARTUP"
@@ -52,7 +53,11 @@ class Log(db.Model):
     level = db.Column(db.String(20), nullable=False)
     message = db.Column(db.String(500), nullable=False)
     username = db.Column(db.String(36), db.ForeignKey('user.username'), nullable=True)
-    log_type = db.Column(db.Enum(LogTypeEnum), nullable=False, default=LogTypeEnum.ELECTRIC_CHECK_SUCCESS)
+    log_type = db.Column(
+        Enum(LogTypeEnum, name='logtypeenum', create_type=False),
+        nullable=False,
+        default=LogTypeEnum.ELECTRIC_CHECK_SUCCESS
+    )
 
     def __repr__(self):
         return f'<Log {self.id} - {self.level}>'

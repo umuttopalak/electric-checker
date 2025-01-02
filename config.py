@@ -15,7 +15,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     ADMIN_KEY = os.environ.get('ADMIN_KEY')
     TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SWAGGER = {
         'title': 'Electric Checker API',
