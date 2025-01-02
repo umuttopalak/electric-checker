@@ -6,9 +6,9 @@ services:
     ports:
       - "3003:3003"
     environment:
-      - FLASK_APP=wsgi.py
-      - FLASK_ENV=development
-      - PYTHONPATH=/app
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_ENV=${FLASK_ENV}
+      - FLASK_DEBUG=${FLASK_DEBUG}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
