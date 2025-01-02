@@ -20,14 +20,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set environment variables
-ENV FLASK_APP=run.py
+ENV FLASK_APP=wsgi.py
 ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 3003
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:3003", "wsgi:app"]
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:3003", "wsgi:app"]
 
 # Copy Swagger specs
 COPY app/swagger_specs /app/app/swagger_specs

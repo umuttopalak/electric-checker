@@ -4,13 +4,14 @@ services:
   web:
     build: .
     command: >
-      sh -c "flask db upgrade &&
-             gunicorn --workers 4 --bind 0.0.0.0:3003 wsgi:app"
+      sh -c "python -m flask db upgrade &&
+             gunicorn --workers 4 --bind 0.0.0.0:3003 'wsgi:app'"
     ports:
       - "3003:3003"
     environment:
       - FLASK_APP=wsgi.py
       - FLASK_ENV=development
+      - PYTHONPATH=/app
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
