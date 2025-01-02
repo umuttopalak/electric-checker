@@ -3,9 +3,6 @@ version: '3.8'
 services:
   web:
     build: .
-    command: >
-      sh -c "python -m flask db upgrade &&
-             gunicorn --workers 4 --bind 0.0.0.0:3003 'wsgi:app'"
     ports:
       - "3003:3003"
     environment:
