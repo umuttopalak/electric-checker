@@ -3,22 +3,22 @@ version: '3.8'
 services:
   web:
     build: .
+    command: >
+      sh -c "flask db upgrade &&
+             gunicorn -w 4 -b 0.0.0.0:3003 wsgi:app"
     ports:
       - "3003:3003"
     environment:
       - FLASK_APP=${FLASK_APP}
       - FLASK_ENV=${FLASK_ENV}
       - FLASK_DEBUG=${FLASK_DEBUG}
+      - PYTHONPATH=/app
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
       - ADMIN_KEY=${ADMIN_KEY}
-      - HOST=${DB_HOST}
-      - USER=${DB_USER}
-      - PASSWORD=${DB_PASSWORD}
-      - DATABASE=${DB_NAME}
-      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - DATABASE_URL=${DATABASE_URL}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
     volumes:
       - .:/app
     networks:

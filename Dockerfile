@@ -13,6 +13,9 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+ENV PYTHONPATH=/app
+ENV FLASK_APP=wsgi.py
+
 EXPOSE 3003
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3003", "--access-logfile", "-", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3003", "--access-logfile", "-", "wsgi:app"]
