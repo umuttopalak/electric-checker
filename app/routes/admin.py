@@ -1,13 +1,15 @@
+import asyncio
+from datetime import datetime, timedelta
+
+from flasgger import swag_from
 from flask import Blueprint, jsonify, request
+
 from app import db
-from app.models.user import User
 from app.models.log import Log, LogTypeEnum
+from app.models.user import User
 from app.utils.logger import log_message
 from app.utils.notifications import send_information
 from config import Config
-from datetime import datetime, timedelta
-import asyncio
-from flasgger import swag_from
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -27,14 +29,15 @@ def get_logs():
 
     page = request.headers.get('X-Page', 1, type=int)
     per_page = request.headers.get('X-Per-Page', 10, type=int)
-    log_type = request.headers.get('X-Log-Type', "SYSTEM_STARTUP", type=str)
+    log_type = request.headers.get('X-Log-Type', None, type=str)
 
     try:
-        logs_query = Log.query.filter_by(
-            log_type=log_type).order_by(Log.timestamp.desc())
-        paginated_logs = logs_query.paginate(
-            page=page, per_page=per_page, error_out=False)
-
+        if log_type:
+            logs_query = Log.query.filter_by(log_type=log_type).order_by(Log.timestamp.desc())
+        else:
+            logs_query = Log.query.order_by(Log.timestamp.desc())
+        
+        paginated_logs = logs_query.paginate(page=page, per_page=per_page, error_out=False)
         logs_data = [log.to_dict() for log in paginated_logs.items]
 
         response_data = {
@@ -60,6 +63,7 @@ def get_logs():
             message=f"Error during log retrieval: {str(e)}",
             log_type=LogTypeEnum.ERROR_API
         )
+        print(str(e))
         return jsonify(status="NOK", message="An error occurred while retrieving logs"), 500
 
 
