@@ -15,4 +15,4 @@ COPY . .
 
 EXPOSE 3003
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3003", "--access-logfile", "-", "wsgi:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3003", "--access-logfile", "-", "--log-level", "debug", "wsgi:app"]

@@ -9,7 +9,7 @@ services:
       - FLASK_APP=wsgi.py
       - FLASK_ENV=${FLASK_ENV}
       - FLASK_DEBUG=${FLASK_DEBUG}
-      - PYTHONPATH=/app
+      - PYTHONPATH=.
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
